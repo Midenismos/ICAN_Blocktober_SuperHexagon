@@ -21,14 +21,25 @@ public class ObstacleSpawner : MonoBehaviour
         [Header("Obstacle")]
         public GameObject prefab;
         public Vector2 scale = Vector2.one;
-        [Min(0f)] public float speed = 2f;
+
+        [Min(0f)]
+        public float speed = 2f;
 
         [Tooltip("Durée de vie en secondes. -1 signifie illimitée jusqu'à la sortie de l'écran.")]
         public float lifetime = -1f;
 
+        [Header("Pré-annonce")]
+        [Min(0f)]
+        public float warningDuration = 2f;
+
+        [Range(0f, 1f)]
+        public float warningAlpha = 0.35f;
+
         [Header("Apparition")]
         public bool randomAngle = true;
-        [Range(0f, 360f)] public float angle;
+
+        [Range(0f, 360f)]
+        public float angle;
 
         [Header("Cible")]
         public TargetType targetType = TargetType.ArenaCenter;
@@ -177,7 +188,9 @@ public class ObstacleSpawner : MonoBehaviour
             type.speed,
             screenMargin,
             type.lifetime,
-            type.arrivalBehavior
+            type.arrivalBehavior,
+            type.warningDuration,
+            type.warningAlpha
         );
     }
 }

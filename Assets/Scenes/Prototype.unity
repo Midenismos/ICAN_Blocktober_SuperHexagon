@@ -284,6 +284,58 @@ Transform:
   m_Children: []
   m_Father: {fileID: 0}
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!1 &1979813524
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1979813525}
+  - component: {fileID: 1979813526}
+  m_Layer: 0
+  m_Name: GameManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!4 &1979813525
+Transform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1979813524}
+  serializedVersion: 2
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 0}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+--- !u!114 &1979813526
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1979813524}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 72caeaf9f00a9454e952f51c77b4d5ba, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameManager
+  gameConfig: {fileID: 11400000, guid: 35c9be7674671ec4cb74bd6e6475618f, type: 2}
+  survivalTimeToWin: 60
+  onVictory:
+    m_PersistentCalls:
+      m_Calls: []
+  onGameOver:
+    m_PersistentCalls:
+      m_Calls: []
 --- !u!1001 &2589515513949438452
 PrefabInstance:
   m_ObjectHideFlags: 0
@@ -537,6 +589,10 @@ PrefabInstance:
       value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 6179391389280789878, guid: 9d9685719e9544e4b8dec1258263185c, type: 3}
+      propertyPath: gameManager
+      value: 
+      objectReference: {fileID: 1979813526}
+    - target: {fileID: 6179391389280789878, guid: 9d9685719e9544e4b8dec1258263185c, type: 3}
       propertyPath: circleCenter
       value: 
       objectReference: {fileID: 1224926901}
@@ -563,6 +619,7 @@ PrefabInstance:
 SceneRoots:
   m_ObjectHideFlags: 0
   m_Roots:
+  - {fileID: 1979813525}
   - {fileID: 1693456737}
   - {fileID: 8741143854544926373}
   - {fileID: 3339033849317711923}

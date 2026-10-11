@@ -1,84 +1,87 @@
 using UnityEngine;
-using UnityEngine.Events;
+using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
-    public enum GameState
-    {
-        Playing,
-        Victory,
-        GameOver
-    }
-
     [Header("Configuration")]
     [SerializeField] private GameConfig gameConfig;
 
-    public GameConfig Config => gameConfig;
-    public GameState CurrentState { get; private set; } = GameState.Playing;
-
     [Header("Condition de victoire")]
-    [SerializeField, Min(1f)] private float survivalTimeToWin = 60f;
+    [SerializeField, Min(1f)] private float victoryTime = 60f;
 
-    [Header("Événements")]
-    [SerializeField] private UnityEvent onVictory;
-    [SerializeField] private UnityEvent onGameOver;
+    [Header("Écrans de fin")]
+    [SerializeField] private GameObject victoryPanel;
+    [SerializeField] private GameObject gameOverPanel;
 
     private float elapsedTime;
+    private bool gameEnded;
+
+    public GameConfig Config => gameConfig;
+    public bool GameEnded => gameEnded;
 
     private void Awake()
     {
         if (gameConfig == null)
         {
-            Debug.LogError("GameConfig n'est pas assigné au GameManager.", this);
+            Debug.LogWarning("GameManager : aucun GameConfig assigné.", this);
         }
 
-        // Utile si une partie se termine puis que la scène est relancée.
+        if (victoryPanel != null)
+            victoryPanel.SetActive(false);
+
+        if (gameOverPanel != null)
+            gameOverPanel.SetActive(false);
+
         Time.timeScale = 1f;
     }
 
     private void Update()
     {
-        if (CurrentState != GameState.Playing)
+        if (gameEnded)
             return;
 
         elapsedTime += Time.deltaTime;
 
-        if (elapsedTime >= survivalTimeToWin)
-            Win();
-    }
-
-    public void Win()
-    {
-        EndGame(GameState.Victory);
+        if (elapsedTime >= victoryTime)
+            Victory();
     }
 
     public void GameOver()
     {
-        EndGame(GameState.GameOver);
+        EndGame(gameOverPanel, "Game Over");
     }
 
-    private void EndGame(GameState finalState)
+    public void Victory()
     {
-        if (CurrentState != GameState.Playing)
+        EndGame(victoryPanel, "Victoire");
+    }
+
+    private void EndGame(GameObject panel, string message)
+    {
+        if (gameEnded)
             return;
 
-        CurrentState = finalState;
+        gameEnded = true;
+        Debug.Log(message, this);
 
-        if (finalState == GameState.Victory)
-            onVictory?.Invoke();
+        if (panel != null)
+            panel.SetActive(true);
         else
-            onGameOver?.Invoke();
+            Debug.LogWarning($"GameManager : assigne le panneau « {message} » dans l’Inspector.", this);
 
         Time.timeScale = 0f;
     }
 
-    private void OnDestroy()
+    public void RestartGame()
     {
         Time.timeScale = 1f;
+        SceneManager.LoadScene(SceneManager.GetActiveScene().buildIndex);
     }
 
-    private void OnValidate()
+    public void QuitGame()
     {
-        survivalTimeToWin = Mathf.Max(1f, survivalTimeToWin);
+        Time.timeScale = 1f;
+        Application.Quit();
+        Debug.Log("Quitter le jeu fonctionne dans une version compilée, pas dans l’éditeur.");
     }
 }

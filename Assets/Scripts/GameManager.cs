@@ -3,10 +3,17 @@ using UnityEngine.SceneManagement;
 
 public class GameManager : MonoBehaviour
 {
+    public enum GameState
+    {
+        Playing,
+        Victory,
+        GameOver
+    }
+
     [Header("Configuration")]
     [SerializeField] private GameConfig gameConfig;
 
-    [Header("Condition de victoire")]
+    [Header("Condition de victoire provisoire")]
     [SerializeField, Min(1f)] private float victoryTime = 60f;
 
     [Header("Écrans de fin")]
@@ -14,60 +21,55 @@ public class GameManager : MonoBehaviour
     [SerializeField] private GameObject gameOverPanel;
 
     private float elapsedTime;
-    private bool gameEnded;
 
     public GameConfig Config => gameConfig;
-    public bool GameEnded => gameEnded;
+    public GameState CurrentState { get; private set; } = GameState.Playing;
 
     private void Awake()
     {
-        if (gameConfig == null)
-        {
-            Debug.LogWarning("GameManager : aucun GameConfig assigné.", this);
-        }
+        Time.timeScale = 1f;
+        CurrentState = GameState.Playing;
 
         if (victoryPanel != null)
             victoryPanel.SetActive(false);
 
         if (gameOverPanel != null)
             gameOverPanel.SetActive(false);
-
-        Time.timeScale = 1f;
     }
 
     private void Update()
     {
-        if (gameEnded)
+        if (CurrentState != GameState.Playing)
             return;
 
         elapsedTime += Time.deltaTime;
 
+        // Condition provisoire : gagner en survivant jusqu'à la durée indiquée.
         if (elapsedTime >= victoryTime)
             Victory();
     }
 
     public void GameOver()
     {
-        EndGame(gameOverPanel, "Game Over");
+        EndGame(GameState.GameOver, gameOverPanel);
     }
 
     public void Victory()
     {
-        EndGame(victoryPanel, "Victoire");
+        EndGame(GameState.Victory, victoryPanel);
     }
 
-    private void EndGame(GameObject panel, string message)
+    private void EndGame(GameState state, GameObject panel)
     {
-        if (gameEnded)
+        if (CurrentState != GameState.Playing)
             return;
 
-        gameEnded = true;
-        Debug.Log(message, this);
+        CurrentState = state;
 
         if (panel != null)
             panel.SetActive(true);
         else
-            Debug.LogWarning($"GameManager : assigne le panneau « {message} » dans l’Inspector.", this);
+            Debug.LogWarning($"GameManager : le panneau pour l'état {state} n'est pas assigné.", this);
 
         Time.timeScale = 0f;
     }
@@ -82,6 +84,5 @@ public class GameManager : MonoBehaviour
     {
         Time.timeScale = 1f;
         Application.Quit();
-        Debug.Log("Quitter le jeu fonctionne dans une version compilée, pas dans l’éditeur.");
     }
 }

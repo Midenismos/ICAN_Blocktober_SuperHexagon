@@ -396,6 +396,7 @@ GameObject:
   - component: {fileID: 6177356671428843485}
   - component: {fileID: 6179391389280789878}
   - component: {fileID: 578130570442246482}
+  - component: {fileID: 6996107937853791709}
   m_Layer: 0
   m_Name: Player
   m_TagString: Untagged
@@ -462,7 +463,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::PlayerController
   gameManager: {fileID: 0}
-  circleCenter: {fileID: 0}
+  circleCenter: {fileID: 8116519500684642980, guid: 12678b0238da8e048a76fc16088a97cf, type: 3}
   radius: 3
   rotationSpeed: 180
   inputDeadzone: 0.2
@@ -491,8 +492,9 @@ MonoBehaviour:
     segmentCollider: {fileID: 7778933515305641071}
   invulnerabilityDuration: 1.25
   obstacleTag: Obstacle
-  acceptTriggerDamage: 0
-  componentsToDisableOnDeath: []
+  acceptTriggerDamage: 1
+  componentsToDisableOnDeath:
+  - {fileID: 6179391389280789878}
   disableCollidersOnDeath: 1
   stopRigidbodyOnDeath: 1
   disableRigidbodySimulationOnDeath: 1
@@ -502,6 +504,18 @@ MonoBehaviour:
   OnDeath:
     m_PersistentCalls:
       m_Calls: []
+--- !u!114 &6996107937853791709
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 5031360965507512212}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f6dadf313ee098944979a13f76169617, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::PlayerCollisionHandler
 --- !u!1 &7146920244206341997
 GameObject:
   m_ObjectHideFlags: 0

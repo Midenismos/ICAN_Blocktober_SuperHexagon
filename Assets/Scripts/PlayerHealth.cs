@@ -50,6 +50,7 @@ public class PlayerHealth : MonoBehaviour
     private float invulnerableUntil;
     private int lastDamageFrame = -1;
     private Rigidbody2D playerRigidbody;
+    private GameManager gameManager;
 
     private void Awake()
     {
@@ -57,6 +58,7 @@ public class PlayerHealth : MonoBehaviour
         damagePerHit = Mathf.Max(1, damagePerHit);
 
         playerRigidbody = GetComponent<Rigidbody2D>();
+        gameManager = FindFirstObjectByType<GameManager>();
         currentHealth = maxHealth;
 
         if (lifeSegments == null || lifeSegments.Length != maxHealth)
@@ -210,6 +212,11 @@ public class PlayerHealth : MonoBehaviour
         }
 
         OnDeath?.Invoke();
+
+        if (gameManager != null)
+            gameManager.GameOver();
+        else
+            Debug.LogWarning("PlayerHealth : aucun GameManager trouvé dans la scène.", this);
     }
 
     private void OnValidate()

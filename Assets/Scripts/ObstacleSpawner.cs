@@ -53,6 +53,7 @@ public class ObstacleSpawner : MonoBehaviour
     [SerializeField, Min(0f)] private float screenMargin = 1f;
 
     private float timer;
+    private GameManager gameManager;
 
     private void Start()
     {
@@ -70,11 +71,18 @@ public class ObstacleSpawner : MonoBehaviour
             return;
         }
 
+        gameManager = FindFirstObjectByType<GameManager>();
         timer = spawnInterval;
     }
 
     private void Update()
     {
+        if (gameManager != null &&
+            gameManager.CurrentState != GameManager.GameState.Playing)
+        {
+            return;
+        }
+
         timer -= Time.deltaTime;
 
         if (timer <= 0f)

@@ -80,7 +80,9 @@ public class PlayerHealth : MonoBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
+        Debug.Log($"PlayerHealth reçoit une collision avec : {collision.gameObject.name}", this);
         TryDamageFromCollider(collision.collider);
+
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -215,4 +217,6 @@ public class PlayerHealth : MonoBehaviour
         maxHealth = Mathf.Max(1, maxHealth);
         damagePerHit = Mathf.Max(1, damagePerHit);
     }
+
+
 }

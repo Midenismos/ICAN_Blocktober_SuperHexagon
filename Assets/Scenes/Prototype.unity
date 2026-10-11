@@ -1659,6 +1659,22 @@ PrefabInstance:
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 578130570442246482, guid: 9d9685719e9544e4b8dec1258263185c, type: 3}
+      propertyPath: invulnerabilityColor.b
+      value: 0.5566037
+      objectReference: {fileID: 0}
+    - target: {fileID: 578130570442246482, guid: 9d9685719e9544e4b8dec1258263185c, type: 3}
+      propertyPath: invulnerabilityColor.g
+      value: 0.928438
+      objectReference: {fileID: 0}
+    - target: {fileID: 578130570442246482, guid: 9d9685719e9544e4b8dec1258263185c, type: 3}
+      propertyPath: invulnerabilityColor.r
+      value: 1
+      objectReference: {fileID: 0}
+    - target: {fileID: 578130570442246482, guid: 9d9685719e9544e4b8dec1258263185c, type: 3}
+      propertyPath: invulnerabilityDuration
+      value: 1.5
+      objectReference: {fileID: 0}
     - target: {fileID: 963555345585602963, guid: 9d9685719e9544e4b8dec1258263185c, type: 3}
       propertyPath: m_Color.b
       value: 0.79931164

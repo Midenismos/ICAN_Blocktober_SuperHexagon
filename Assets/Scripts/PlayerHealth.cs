@@ -1,4 +1,5 @@
 using System;
+using System.Collections;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -22,13 +23,20 @@ public class PlayerHealth : MonoBehaviour
     [Header("Invulnérabilité")]
     [SerializeField, Min(0.01f)] private float invulnerabilityDuration = 1.25f;
 
+    [Header("Effet visuel après un dégât")]
+    [Tooltip("Couleur appliquée aux SpriteRenderers du joueur pendant l'invulnérabilité.")]
+    [SerializeField] private Color invulnerabilityColor = Color.red;
+
+    [Tooltip("SpriteRenderers à recolorer. Si la liste est vide, ceux du joueur et de ses enfants sont utilisés.")]
+    [SerializeField] private SpriteRenderer[] playerRenderers;
+
     [Header("Détection des obstacles")]
     [SerializeField] private string obstacleTag = "Obstacle";
     [Tooltip("À activer si les obstacles utilisent Is Trigger.")]
     [SerializeField] private bool acceptTriggerDamage;
 
     [Header("À la mort")]
-    [Tooltip("Ajoute ici le script de déplacement du joueur pour l'arrêter à sa mort.")]
+    [Tooltip("Ajoute ici le script de déplacement du joueur pour l'arrêter à sa mort. Ne pas ajouter PlayerHealth.")]
     [SerializeField] private MonoBehaviour[] componentsToDisableOnDeath;
     [SerializeField] private bool disableCollidersOnDeath = true;
     [SerializeField] private bool stopRigidbodyOnDeath = true;
@@ -49,8 +57,11 @@ public class PlayerHealth : MonoBehaviour
     private bool isDead;
     private float invulnerableUntil;
     private int lastDamageFrame = -1;
+
     private Rigidbody2D playerRigidbody;
     private GameManager gameManager;
+    private Coroutine damageEffectCoroutine;
+    private Color[] originalRendererColors;
 
     private void Awake()
     {
@@ -58,7 +69,18 @@ public class PlayerHealth : MonoBehaviour
         damagePerHit = Mathf.Max(1, damagePerHit);
 
         playerRigidbody = GetComponent<Rigidbody2D>();
-        gameManager = FindFirstObjectByType<GameManager>();
+
+        if (gameManager == null)
+        {
+            GameObject managerObject = GameObject.Find("GameManager");
+            if (managerObject != null)
+                gameManager = managerObject.GetComponent<GameManager>();
+        }
+
+        if (playerRenderers == null || playerRenderers.Length == 0)
+            playerRenderers = GetComponentsInChildren<SpriteRenderer>(true);
+
+        CacheOriginalColors();
         currentHealth = maxHealth;
 
         if (lifeSegments == null || lifeSegments.Length != maxHealth)
@@ -69,22 +91,16 @@ public class PlayerHealth : MonoBehaviour
             );
         }
 
-        // Au démarrage, active les segments correspondant aux PV disponibles.
         if (lifeSegments != null)
         {
             for (int i = 0; i < lifeSegments.Length; i++)
-            {
-                bool shouldBeActive = i < currentHealth;
-                SetSegmentActive(i, shouldBeActive);
-            }
+                SetSegmentActive(i, i < currentHealth);
         }
     }
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        Debug.Log($"PlayerHealth reçoit une collision avec : {collision.gameObject.name}", this);
         TryDamageFromCollider(collision.collider);
-
     }
 
     private void OnCollisionStay2D(Collision2D collision)
@@ -130,15 +146,33 @@ public class PlayerHealth : MonoBehaviour
         if (isDead || amount <= 0 || IsInvulnerable)
             return false;
 
-        // Évite de perdre plusieurs PV pendant la même frame.
+        // Évite plusieurs pertes de vie pendant la même frame.
         if (lastDamageFrame == Time.frameCount)
             return false;
 
         lastDamageFrame = Time.frameCount;
+
+        int previousHealth = currentHealth;
         currentHealth = Mathf.Max(0, currentHealth - amount);
         invulnerableUntil = Time.time + invulnerabilityDuration;
 
-        RemoveLostSegments();
+        StartDamageVisualEffect();
+
+        // Désactive immédiatement les colliders des segments perdus,
+        // mais laisse leurs visuels actifs pendant l'animation.
+        for (int i = 0; i < lifeSegments.Length; i++)
+        {
+            bool stillAlive = i < currentHealth;
+
+            if (stillAlive)
+            {
+                SetSegmentActive(i, true);
+            }
+            else if (i < previousHealth)
+            {
+                StartCoroutine(ShrinkAndHideSegment(i));
+            }
+        }
 
         OnHealthChanged?.Invoke(currentHealth, maxHealth);
         OnDamaged?.Invoke();
@@ -149,17 +183,89 @@ public class PlayerHealth : MonoBehaviour
         return true;
     }
 
-    private void RemoveLostSegments()
+    private IEnumerator ShrinkAndHideSegment(int index)
     {
-        if (lifeSegments == null)
+        if (lifeSegments == null || index < 0 || index >= lifeSegments.Length)
+            yield break;
+
+        LifeSegment segment = lifeSegments[index];
+
+        if (segment == null)
+            yield break;
+
+        if (segment.segmentCollider != null)
+            segment.segmentCollider.enabled = false;
+
+        if (segment.visual == null)
+            yield break;
+
+        Transform visualTransform = segment.visual.transform;
+        Vector3 startScale = visualTransform.localScale;
+        float elapsed = 0f;
+
+        while (elapsed < invulnerabilityDuration && visualTransform != null)
+        {
+            elapsed += Time.deltaTime;
+            float progress = Mathf.Clamp01(elapsed / invulnerabilityDuration);
+            visualTransform.localScale = Vector3.Lerp(startScale, Vector3.zero, progress);
+            yield return null;
+        }
+
+        if (segment.visual != null)
+        {
+            visualTransform.localScale = Vector3.zero;
+            segment.visual.SetActive(false);
+        }
+    }
+
+    private void StartDamageVisualEffect()
+    {
+        if (damageEffectCoroutine != null)
+            StopCoroutine(damageEffectCoroutine);
+
+        damageEffectCoroutine = StartCoroutine(DamageVisualEffect());
+    }
+
+    private IEnumerator DamageVisualEffect()
+    {
+        SetRendererColors(invulnerabilityColor);
+        yield return new WaitForSeconds(invulnerabilityDuration);
+        RestoreRendererColors();
+        damageEffectCoroutine = null;
+    }
+
+    private void CacheOriginalColors()
+    {
+        originalRendererColors = new Color[playerRenderers.Length];
+
+        for (int i = 0; i < playerRenderers.Length; i++)
+        {
+            if (playerRenderers[i] != null)
+                originalRendererColors[i] = playerRenderers[i].color;
+        }
+    }
+
+    private void SetRendererColors(Color color)
+    {
+        if (playerRenderers == null)
             return;
 
-        // Les segments sont renseignés dans l'ordre de perte :
-        // le dernier segment assigné est supprimé en premier.
-        for (int i = 0; i < lifeSegments.Length; i++)
+        for (int i = 0; i < playerRenderers.Length; i++)
         {
-            bool shouldBeActive = i < currentHealth;
-            SetSegmentActive(i, shouldBeActive);
+            if (playerRenderers[i] != null)
+                playerRenderers[i].color = color;
+        }
+    }
+
+    private void RestoreRendererColors()
+    {
+        if (playerRenderers == null || originalRendererColors == null)
+            return;
+
+        for (int i = 0; i < playerRenderers.Length; i++)
+        {
+            if (playerRenderers[i] != null)
+                playerRenderers[i].color = originalRendererColors[i];
         }
     }
 
@@ -169,6 +275,9 @@ public class PlayerHealth : MonoBehaviour
             return;
 
         LifeSegment segment = lifeSegments[index];
+
+        if (segment == null)
+            return;
 
         if (segment.visual != null)
             segment.visual.SetActive(active);
@@ -224,6 +333,4 @@ public class PlayerHealth : MonoBehaviour
         maxHealth = Mathf.Max(1, maxHealth);
         damagePerHit = Mathf.Max(1, damagePerHit);
     }
-
-
 }
